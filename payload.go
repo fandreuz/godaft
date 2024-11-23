@@ -20,6 +20,11 @@ type rangeType struct {
 	To   string `json:"to"`
 }
 
+type geoFilterType struct {
+	StoredShapeIds []string `json:"storedShapeIds"`
+	GeoSearchType  string   `json:"geoSearchType"`
+}
+
 func initPagingPayload() pagingPayloadType {
 	tmp := make(pagingPayloadType)
 	tmp["from"] = 0
@@ -137,6 +142,23 @@ func SetAddedSinceRange(payload payloadType, addedSince AddedSince) {
 
 func SetBerRange(payload payloadType, min Ber, max Ber) {
 	addRange(payload, "ber", strconv.Itoa(int(min)), strconv.Itoa(int(max)))
+}
+
+func ensureGeoFilters(payload payloadType) []geoFilterType {
+	return ensureArrayField[geoFilterType](payload, "geoFilters")
+}
+
+func addGeoFilter(payload payloadType, geoSearchType string, id int, distance Distance) {
+	geoFilterPayloads := ensureGeoFilters(payload)
+
+	idWithDistance := strconv.Itoa(id) + string(distance)
+	for idx, geoFilterItem := range geoFilterPayloads {
+		if geoFilterItem.GeoSearchType == geoSearchType {
+			geoFilterPayloads[idx].StoredShapeIds = append(geoFilterPayloads[idx].StoredShapeIds, idWithDistance)
+			return
+		}
+	}
+	payload["geoFilters"] = append(geoFilterPayloads, geoFilterType{GeoSearchType: geoSearchType, StoredShapeIds: []string{idWithDistance}})
 }
 
 func SetSortCriteria(payload payloadType, criteria SortCriteria) {
