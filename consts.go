@@ -81,3 +81,14 @@ const (
 	F  Ber = 13
 	G  Ber = 14
 )
+
+type Distance string
+
+const (
+	DISTANCE_KM0  Distance = ""
+	DISTANCE_KM1  Distance = "_1000"
+	DISTANCE_KM3  Distance = "_3000"
+	DISTANCE_KM5  Distance = "_5000"
+	DISTANCE_KM10 Distance = "_10000"
+	DISTANCE_KM20 Distance = "_20000"
+)
