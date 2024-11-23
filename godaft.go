@@ -11,7 +11,7 @@ import (
 
 const endpoint string = "https://gateway.daft.ie/old/v1/listings"
 
-func DoRequest(payload payloadType) (*fastjson.Value, error) {
+func DoRequest(payload PayloadType) (*fastjson.Value, error) {
 	jsonBody, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err

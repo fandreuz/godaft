@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-type payloadType struct {
+type PayloadType struct {
 	Filters   []filterType      `json:"filters"`
 	Ranges    []rangeType       `json:"ranges"`
 	GeoFilter geoFilterType     `json:"geoFilter"`
@@ -44,19 +44,19 @@ func newPagingPayload() pagingPayloadType {
 	return pagingPayloadType{From: 0, Pagesize: math.MaxInt}
 }
 
-func NewPayload() payloadType {
-	return payloadType{Filters: []filterType{}, Ranges: []rangeType{}, GeoFilter: newGeoFilter(), Paging: newPagingPayload()}
+func NewPayload() PayloadType {
+	return PayloadType{Filters: []filterType{}, Ranges: []rangeType{}, GeoFilter: newGeoFilter(), Paging: newPagingPayload()}
 }
 
-func (payload *payloadType) SetFetchCount(count int) {
+func (payload *PayloadType) SetFetchCount(count int) {
 	payload.Paging.Pagesize = count
 }
 
-func (payload *payloadType) SetFetchStart(start int) {
+func (payload *PayloadType) SetFetchStart(start int) {
 	payload.Paging.From = start
 }
 
-func (payload *payloadType) addFilter(filterName string, value string) {
+func (payload *PayloadType) addFilter(filterName string, value string) {
 	for idx, filter := range payload.Filters {
 		if filter.Name == filterName {
 			payload.Filters[idx].Value = append(filter.Value, value)
@@ -66,15 +66,15 @@ func (payload *payloadType) addFilter(filterName string, value string) {
 	payload.Filters = append(payload.Filters, filterType{Name: filterName, Value: []string{value}})
 }
 
-func (payload *payloadType) AddPropertyType(propertyType PropertyType) {
+func (payload *PayloadType) AddPropertyType(propertyType PropertyType) {
 	payload.addFilter("propertyType", string(propertyType))
 }
 
-func (payload *payloadType) AddSuitableGender(gender Gender) {
+func (payload *PayloadType) AddSuitableGender(gender Gender) {
 	payload.addFilter("suitableFor", string(gender))
 }
 
-func (payload *payloadType) addRange(rangeName string, min string, max string) {
+func (payload *PayloadType) addRange(rangeName string, min string, max string) {
 	for idx, rangeItem := range payload.Ranges {
 		if rangeItem.Name == rangeName {
 			payload.Ranges[idx].From = min
@@ -85,7 +85,7 @@ func (payload *payloadType) addRange(rangeName string, min string, max string) {
 	payload.Ranges = append(payload.Ranges, rangeType{Name: rangeName, From: min, To: max})
 }
 
-func (payload *payloadType) SetPriceRange(min int, max int) {
+func (payload *PayloadType) SetPriceRange(min int, max int) {
 	var rangeName string
 	switch payload.Section {
 	case ST_RESIDENTIAL_RENT, ST_COMMERCIAL_RENT, ST_SHARING, ST_STUDENT_ACCOMMODATION:
@@ -96,43 +96,43 @@ func (payload *payloadType) SetPriceRange(min int, max int) {
 	payload.addRange(rangeName, strconv.Itoa(min), strconv.Itoa(max))
 }
 
-func (payload *payloadType) SetBedsRange(min int, max int) {
+func (payload *PayloadType) SetBedsRange(min int, max int) {
 	payload.addRange("numBeds", strconv.Itoa(min), strconv.Itoa(max))
 }
 
-func (payload *payloadType) SetBathsRange(min int, max int) {
+func (payload *PayloadType) SetBathsRange(min int, max int) {
 	payload.addRange("numBaths", strconv.Itoa(min), strconv.Itoa(max))
 }
 
-func (payload *payloadType) SetTenantsRange(min int, max int) {
+func (payload *PayloadType) SetTenantsRange(min int, max int) {
 	payload.addRange("numTenants", strconv.Itoa(min), strconv.Itoa(max))
 }
 
-func (payload *payloadType) SetLeaseRange(min int, max int) {
+func (payload *PayloadType) SetLeaseRange(min int, max int) {
 	payload.addRange("leaseLength", strconv.Itoa(min), strconv.Itoa(max))
 }
 
-func (payload *payloadType) SetFloorSizeRange(min int, max int) {
+func (payload *PayloadType) SetFloorSizeRange(min int, max int) {
 	payload.addRange("floorSize", strconv.Itoa(min), strconv.Itoa(max))
 }
 
-func (payload *payloadType) SetAddedSinceRange(addedSince AddedSince) {
+func (payload *PayloadType) SetAddedSinceRange(addedSince AddedSince) {
 	payload.addRange("firstPublishDate", string(addedSince), "")
 }
 
-func (payload *payloadType) SetBerRange(min Ber, max Ber) {
+func (payload *PayloadType) SetBerRange(min Ber, max Ber) {
 	payload.addRange("ber", strconv.Itoa(int(min)), strconv.Itoa(int(max)))
 }
 
-func (payload *payloadType) AddGeoFilter(location Location, distance Distance) {
+func (payload *PayloadType) AddGeoFilter(location Location, distance Distance) {
 	idWithDistance := strconv.Itoa(location.GetId()) + string(distance)
 	payload.GeoFilter.StoredShapeIds = append(payload.GeoFilter.StoredShapeIds, idWithDistance)
 }
 
-func (payload *payloadType) SetSortCriteria(criteria SortCriteria) {
+func (payload *PayloadType) SetSortCriteria(criteria SortCriteria) {
 	payload.Sort = criteria
 }
 
-func (payload *payloadType) SetSearchType(searchType SearchType) {
+func (payload *PayloadType) SetSearchType(searchType SearchType) {
 	payload.Section = searchType
 }
