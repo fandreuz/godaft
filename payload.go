@@ -124,8 +124,8 @@ func (payload *payloadType) SetBerRange(min Ber, max Ber) {
 	payload.addRange("ber", strconv.Itoa(int(min)), strconv.Itoa(int(max)))
 }
 
-func (payload *payloadType) AddGeoFilter(id int, distance Distance) {
-	idWithDistance := strconv.Itoa(id) + string(distance)
+func (payload *payloadType) AddGeoFilter(location Location, distance Distance) {
+	idWithDistance := strconv.Itoa(location.GetId()) + string(distance)
 	payload.GeoFilter.StoredShapeIds = append(payload.GeoFilter.StoredShapeIds, idWithDistance)
 }
 
