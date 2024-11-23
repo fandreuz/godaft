@@ -6,15 +6,15 @@ type Location struct {
 	displayValue string
 }
 
-func (l Location) getId() string {
+func (l Location) GetId() string {
 	return l.id
 }
 
-func (l Location) getDisplayName() string {
+func (l Location) GetDisplayName() string {
 	return l.displayName
 }
 
-func (l Location) getDisplayValue() string {
+func (l Location) GetDisplayValue() string {
 	return l.displayValue
 }
 
