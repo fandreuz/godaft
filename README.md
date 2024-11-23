@@ -2,7 +2,17 @@
 
 Go client for [daft.ie](https://www.daft.ie/).
 
-## Examples
+## Getting started
+
+### Installation
+
+Within a Go project directory:
+
+```bash
+go get github.com/fandreuz/godaft@v0.0.1
+```
+
+### Usages
 
 Simple example usages are available in [demo/main.go](demo/main.go).
 
