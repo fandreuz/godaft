@@ -5,8 +5,19 @@ import (
 	"strconv"
 )
 
-type payloadType map[string]any
-type pagingPayloadType map[string]int
+type payloadType struct {
+	Filters   []filterType      `json:"filters"`
+	Ranges    []rangeType       `json:"ranges"`
+	GeoFilter geoFilterType     `json:"geoFilter"`
+	Paging    pagingPayloadType `json:"paging"`
+	Section   SearchType        `json:"section"`
+	Sort      SortCriteria      `json:"sort"`
+}
+
+type pagingPayloadType struct {
+	From     int `json:"from"`
+	Pagesize int `json:"pagesize"`
+}
 
 type filterType struct {
 	Name  string   `json:"name"`
@@ -25,142 +36,103 @@ type geoFilterType struct {
 	GeoSearchType  string   `json:"geoSearchType"`
 }
 
-func initPagingPayload() pagingPayloadType {
-	tmp := make(pagingPayloadType)
-	tmp["from"] = 0
-	tmp["pagesize"] = math.MaxInt
-	return tmp
+func newGeoFilter() geoFilterType {
+	return geoFilterType{GeoSearchType: "STORED_SHAPES", StoredShapeIds: []string{}}
 }
 
-func SetFetchCount(payload payloadType, count int) {
-	pagingPayload, ok := payload["paging"]
-	if !ok {
-		tmp := initPagingPayload()
-		payload["paging"] = tmp
-		pagingPayload = tmp
-	}
-
-	pagingPayload.(pagingPayloadType)["pagesize"] = count
+func newPagingPayload() pagingPayloadType {
+	return pagingPayloadType{From: 0, Pagesize: math.MaxInt}
 }
 
-func SetFetchStart(payload payloadType, start int) {
-	pagingPayload, ok := payload["paging"]
-	if !ok {
-		tmp := initPagingPayload()
-		payload["paging"] = tmp
-		pagingPayload = tmp
-	}
-
-	pagingPayload.(pagingPayloadType)["from"] = start
+func NewPayload() payloadType {
+	return payloadType{Filters: []filterType{}, Ranges: []rangeType{}, GeoFilter: newGeoFilter(), Paging: newPagingPayload()}
 }
 
-func ensureArrayField[T any](payload payloadType, fieldName string) []T {
-	_, ok := payload[fieldName]
-	if !ok {
-		payload[fieldName] = make([]T, 0)
-	}
-	return payload[fieldName].([]T)
+func (payload *payloadType) SetFetchCount(count int) {
+	payload.Paging.Pagesize = count
 }
 
-func ensureFilters(payload payloadType) []filterType {
-	return ensureArrayField[filterType](payload, "filters")
+func (payload *payloadType) SetFetchStart(start int) {
+	payload.Paging.From = start
 }
 
-func addFilter(payload payloadType, filterName string, value string) {
-	filterPayloads := ensureFilters(payload)
-	for idx, filter := range filterPayloads {
+func (payload *payloadType) addFilter(filterName string, value string) {
+	for idx, filter := range payload.Filters {
 		if filter.Name == filterName {
-			filterPayloads[idx].Value = append(filter.Value, value)
+			payload.Filters[idx].Value = append(filter.Value, value)
 			return
 		}
 	}
-	payload["filters"] = append(filterPayloads, filterType{Name: filterName, Value: []string{value}})
+	payload.Filters = append(payload.Filters, filterType{Name: filterName, Value: []string{value}})
 }
 
-func AddPropertyType(payload payloadType, propertyType PropertyType) {
-	addFilter(payload, "propertyType", string(propertyType))
+func (payload *payloadType) AddPropertyType(propertyType PropertyType) {
+	payload.addFilter("propertyType", string(propertyType))
 }
 
-func SetSearchType(payload payloadType, searchType SearchType) {
-	payload["section"] = searchType
+func (payload *payloadType) AddSuitableGender(gender Gender) {
+	payload.addFilter("suitableFor", string(gender))
 }
 
-func AddSuitableGender(payload payloadType, gender Gender) {
-	addFilter(payload, "suitableFor", string(gender))
-}
-
-func ensureRanges(payload payloadType) []rangeType {
-	return ensureArrayField[rangeType](payload, "ranges")
-}
-
-func addRange(payload payloadType, rangeName string, min string, max string) {
-	rangePayloads := ensureRanges(payload)
-	for idx, rangeItem := range rangePayloads {
+func (payload *payloadType) addRange(rangeName string, min string, max string) {
+	for idx, rangeItem := range payload.Ranges {
 		if rangeItem.Name == rangeName {
-			rangePayloads[idx].From = min
-			rangePayloads[idx].To = max
+			payload.Ranges[idx].From = min
+			payload.Ranges[idx].To = max
 			return
 		}
 	}
-	payload["ranges"] = append(rangePayloads, rangeType{Name: rangeName, From: min, To: max})
+	payload.Ranges = append(payload.Ranges, rangeType{Name: rangeName, From: min, To: max})
 }
 
-func SetPriceRange(payload payloadType, min int, max int) {
+func (payload *payloadType) SetPriceRange(min int, max int) {
 	var rangeName string
-	switch payload["section"] {
+	switch payload.Section {
 	case ST_RESIDENTIAL_RENT, ST_COMMERCIAL_RENT, ST_SHARING, ST_STUDENT_ACCOMMODATION:
 		rangeName = "rentalPrice"
 	default:
 		rangeName = "salePrice"
 	}
-	addRange(payload, rangeName, strconv.Itoa(min), strconv.Itoa(max))
+	payload.addRange(rangeName, strconv.Itoa(min), strconv.Itoa(max))
 }
 
-func SetBedsRange(payload payloadType, min int, max int) {
-	addRange(payload, "numBeds", strconv.Itoa(min), strconv.Itoa(max))
+func (payload *payloadType) SetBedsRange(min int, max int) {
+	payload.addRange("numBeds", strconv.Itoa(min), strconv.Itoa(max))
 }
 
-func SetBathsRange(payload payloadType, min int, max int) {
-	addRange(payload, "numBaths", strconv.Itoa(min), strconv.Itoa(max))
+func (payload *payloadType) SetBathsRange(min int, max int) {
+	payload.addRange("numBaths", strconv.Itoa(min), strconv.Itoa(max))
 }
 
-func SetTenantsRange(payload payloadType, min int, max int) {
-	addRange(payload, "numTenants", strconv.Itoa(min), strconv.Itoa(max))
+func (payload *payloadType) SetTenantsRange(min int, max int) {
+	payload.addRange("numTenants", strconv.Itoa(min), strconv.Itoa(max))
 }
 
-func SetLeaseRange(payload payloadType, min int, max int) {
-	addRange(payload, "leaseLength", strconv.Itoa(min), strconv.Itoa(max))
+func (payload *payloadType) SetLeaseRange(min int, max int) {
+	payload.addRange("leaseLength", strconv.Itoa(min), strconv.Itoa(max))
 }
 
-func SetFloorSizeRange(payload payloadType, min int, max int) {
-	addRange(payload, "floorSize", strconv.Itoa(min), strconv.Itoa(max))
+func (payload *payloadType) SetFloorSizeRange(min int, max int) {
+	payload.addRange("floorSize", strconv.Itoa(min), strconv.Itoa(max))
 }
 
-func SetAddedSinceRange(payload payloadType, addedSince AddedSince) {
-	addRange(payload, "firstPublishDate", string(addedSince), "")
+func (payload *payloadType) SetAddedSinceRange(addedSince AddedSince) {
+	payload.addRange("firstPublishDate", string(addedSince), "")
 }
 
-func SetBerRange(payload payloadType, min Ber, max Ber) {
-	addRange(payload, "ber", strconv.Itoa(int(min)), strconv.Itoa(int(max)))
+func (payload *payloadType) SetBerRange(min Ber, max Ber) {
+	payload.addRange("ber", strconv.Itoa(int(min)), strconv.Itoa(int(max)))
 }
 
-func ensureGeoFilters(payload payloadType) []geoFilterType {
-	return ensureArrayField[geoFilterType](payload, "geoFilters")
-}
-
-func addGeoFilter(payload payloadType, geoSearchType string, id int, distance Distance) {
-	geoFilterPayloads := ensureGeoFilters(payload)
-
+func (payload *payloadType) AddGeoFilter(id int, distance Distance) {
 	idWithDistance := strconv.Itoa(id) + string(distance)
-	for idx, geoFilterItem := range geoFilterPayloads {
-		if geoFilterItem.GeoSearchType == geoSearchType {
-			geoFilterPayloads[idx].StoredShapeIds = append(geoFilterPayloads[idx].StoredShapeIds, idWithDistance)
-			return
-		}
-	}
-	payload["geoFilters"] = append(geoFilterPayloads, geoFilterType{GeoSearchType: geoSearchType, StoredShapeIds: []string{idWithDistance}})
+	payload.GeoFilter.StoredShapeIds = append(payload.GeoFilter.StoredShapeIds, idWithDistance)
 }
 
-func SetSortCriteria(payload payloadType, criteria SortCriteria) {
-	payload["sort"] = criteria
+func (payload *payloadType) SetSortCriteria(criteria SortCriteria) {
+	payload.Sort = criteria
+}
+
+func (payload *payloadType) SetSearchType(searchType SearchType) {
+	payload.Section = searchType
 }
