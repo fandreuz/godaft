@@ -2,22 +2,29 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/fandreuz/godaft"
 )
 
 func main() {
-	payload := make(map[string]any)
-	godaft.SetFetchCount(payload, 10)
-	godaft.AddPropertyType(payload, godaft.PT_APARTMENT)
-	godaft.AddPropertyType(payload, godaft.PT_STUDIO_APARTMENT)
-	godaft.SetSearchType(payload, godaft.ST_RESIDENTIAL_RENT)
-	godaft.SetAddedSinceRange(payload, godaft.AS_LAST_3_DAYS)
-	godaft.SetPriceRange(payload, 1000, 1300)
+	payload := godaft.NewPayload()
+	payload.SetFetchCount(10)
+	payload.AddPropertyType(godaft.PT_APARTMENT)
+	payload.AddPropertyType(godaft.PT_STUDIO_APARTMENT)
+	payload.SetSearchType(godaft.ST_RESIDENTIAL_RENT)
+	payload.SetAddedSinceRange(godaft.AS_LAST_3_DAYS)
+	payload.SetPriceRange(1000, 1300)
+
+	for _, location := range godaft.ALL_LOCATIONS {
+		if strings.Contains(location.GetDisplayName(), "Dublin") {
+			payload.AddGeoFilter(location.GetId(), godaft.DISTANCE_KM5)
+		}
+	}
 
 	parsed, err := godaft.DoRequest(payload)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Print(parsed.GetArray("listings"))
+	fmt.Print(parsed.GetArray("listings")[0])
 }
