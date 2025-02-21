@@ -3,6 +3,7 @@ package godaft
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -30,6 +31,9 @@ func DoRequest(payload PayloadType) (*fastjson.Value, error) {
 	httpResult, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
+	}
+	if httpResult.StatusCode != 200 {
+		return nil, fmt.Errorf("HTTP status code: %d", httpResult.StatusCode)
 	}
 
 	resultBody, err := io.ReadAll(httpResult.Body)
